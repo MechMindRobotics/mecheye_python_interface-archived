@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 import zmq
-from protobuf import image_pb2
-from protobuf import cameraStatus_pb2
 import sys
 
 def createAddr(ip, port):
@@ -37,15 +35,12 @@ class ZmqClient:
 
     def sendReq(self, request):
         try:
-            self.__reqBuf = request.SerializeToString()
+            self.__reqBuf = request
             if len(self.__addr) == 0:
                 return {}
-            received = self.__sendMsg()
-            if len(received) == 0:
+            reply = self.__sendMsg()
+            if len(reply) == 0:
                 return {}
-            reply = image_pb2.Response()
-
-            reply.ParseFromString(received)
             return reply
         except Exception as e:
             print("Network Error! Please check your ip address and connection!")
@@ -54,7 +49,7 @@ class ZmqClient:
     def __sendMsg(self):
         try:
             message = self.__reqBuf
-            self.__socket.send(message)
+            self.__socket.send_string(message)
             return self.__socket.recv()
         except Exception as e:
             print("Network Error! Please check your ip address and connection!")

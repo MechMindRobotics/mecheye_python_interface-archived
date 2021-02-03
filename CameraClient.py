@@ -1,26 +1,18 @@
 #!/usr/bin/env python
 from ZmqClient import ZmqClient
 import sys
-from protobuf import image_pb2
-from protobuf import cameraStatus_pb2
 import cv2
 import numpy as np
 import open3d
 import ctypes
 from struct import unpack
+import json
 
 Encode32FBias = 32768
 SIZE_OF_DOUBLE = ctypes.sizeof(ctypes.c_double)
-
-
-def find_last_of(string, c):
-    last_position = -1
-    while True:
-        position = string.find(c, last_position + 1)
-        if position == -1:
-            return last_position
-        last_position = position
-
+SIZE_OF_INT = ctypes.sizeof(ctypes.c_int32)
+SIZE_OF_JSON = 4
+SIZE_OF_SCALE = 8
 
 class ImageType():
     DEPTH = 1
@@ -28,13 +20,24 @@ class ImageType():
     COLOR_DEPTH = COLOR | DEPTH
 
 
-class NetCamCmd():
-    CaptureImage = 0
-    GetCameraIntri = 11
-    GetCameraStatus = 19
-    SetCameraParameter = 25
-    GetCameraParameter = 26
-    CaptureGratingImage = 8
+class Service():
+    cmd = "cmd"
+    property_name = "property_name"
+    property_value = "property_value"
+    image_type = "image_type"
+    persistent = "persistent"
+    camera_config = "camera_config"
+
+class Command:
+    CaptureImage = "CaptureImage"
+    GetCameraIntri = "GetCameraIntri"
+    GetCameraId = "GetCameraId"
+    GetCameraInfo = "GetCameraInfo"
+    GetCamera2dInfo = "GetCamera2dInfo"
+    GetServerInfo = "GetServerInfo"
+    SetCameraParams = "SetCameraConfig"
+    GetCameraParams = "GetCameraConfig"
+    CaptureGratingImage = "CaptureGratingImage"
 
 
 class CameraIntri:
@@ -62,8 +65,14 @@ def readDouble(data, pos):
         return 0
     strFromQDataStream = data[pos: pos + SIZE_OF_DOUBLE]
     v = unpack(">d", strFromQDataStream)
-    return v
+    return v[0]
 
+def readInt(data,pos):
+    if pos + SIZE_OF_INT > len(data):
+        return 0
+    strFromQDataStream = data[pos: pos + SIZE_OF_INT]
+    v = unpack(">i",strFromQDataStream)
+    return v[0]
 
 def asMat(data, offset=0):
     mat = []
@@ -86,21 +95,19 @@ def matC1ToC3(mat):
     return rel
 
 
-def read32FC3Mat(data):
+def read32FC3Mat(data,scale):
     if len(data) == 0:
         return []
-    scale = readDouble(data,0)[0]
-    matC1 = cv2.imdecode(asMat(data,SIZE_OF_DOUBLE),cv2.IMREAD_ANYDEPTH)
+    matC1 = cv2.imdecode(asMat(data),cv2.IMREAD_ANYDEPTH)
     bias16UC3 = matC1ToC3(matC1)
     t = np.float32(bias16UC3)
     mat32F = (t - Encode32FBias)/scale
     return mat32F
 
-def read32FC1Mat(data, offset=0):
+def read32FC1Mat(data, scale):
     if len(data) == 0:
         return []
-    scale = readDouble(data, offset)
-    bias16U = cv2.imdecode(asMat(data, SIZE_OF_DOUBLE + offset), cv2.IMREAD_ANYDEPTH)
+    bias16U = cv2.imdecode(asMat(data), cv2.IMREAD_ANYDEPTH)
     bias32F = bias16U.astype(np.float32)
     mat32F = bias32F
     mat32F[:, :] -= Encode32FBias
@@ -120,37 +127,35 @@ class CameraClient(ZmqClient):
         return ZmqClient.setAddr(self, ip, self.__kImagePort, 60000)
 
     def captureDepthImg(self):
-        response = self.__sendRequest(NetCamCmd.CaptureImage, ImageType.DEPTH)
-        if len(response.imageDepth) == 0:
+        response = self.__sendRequest(Command.CaptureImage, image_type = ImageType.DEPTH)
+        jsonSize = readInt(response, 0)
+        scale = readDouble(response, jsonSize + SIZE_OF_JSON)
+        imageSize = readInt(response, SIZE_OF_JSON + jsonSize + SIZE_OF_SCALE)
+        imageBegin = SIZE_OF_JSON + jsonSize + SIZE_OF_SCALE + SIZE_OF_INT
+        imageDepth = response[imageBegin: imageBegin + imageSize]
+        if len(imageDepth) == 0:
             print("Client depth image is empty!")
             return {}
         print("Depth image captured!")
-        return read32FC1Mat(response.imageDepth, 2)
+        return read32FC1Mat(imageDepth, scale)
 
     def captureColorImg(self):
-        response = self.__sendRequest(NetCamCmd.CaptureImage, ImageType.COLOR)
-        if len(response.imageRGB) == 0:
+        response = self.__sendRequest(Command.CaptureImage, image_type = ImageType.COLOR)
+        jsonSize = readInt(response,0)
+        imageSize = readInt(response,SIZE_OF_JSON + jsonSize + SIZE_OF_SCALE)
+        imageBegin = SIZE_OF_JSON + jsonSize + SIZE_OF_SCALE + SIZE_OF_INT
+        imageRGB = response[imageBegin : imageBegin + imageSize]
+        if len(imageRGB) == 0:
             print("Client depth image is empty!")
             return {}
         print("Color image captured!")
-        return cv2.imdecode(asMat(response.imageRGB), cv2.IMREAD_COLOR)
+        return cv2.imdecode(asMat(imageRGB), cv2.IMREAD_COLOR)
 
     def getCameraIntri(self):
-        response = self.__sendRequest(NetCamCmd.GetCameraIntri, 0)
+        response = self.__sendRequest(Command.GetCameraIntri, 0)
         print("Camera intrinsics: ")
-        print(response.camIntri)
-
-        start = find_last_of(response.camIntri, "[")
-        end = find_last_of(response.camIntri, "]")
-        if start == -1 or end == -1 or end < start:
-            print("Wrong camera intrinsics.")
-            return {}
-
-        intriStr = response.camIntri[start + 1: end]
-        intriValue = intriStr.split(",")
-        if len(intriValue) != 4:
-            print("Wrong intrinscis value")
-            return {}
+        intriJson = json.loads(response[SIZE_OF_JSON:-1])
+        intriValue = intriJson["camera_intri"]['intrinsic']
 
         intri = CameraIntri()
         intri.setValue(
@@ -168,47 +173,59 @@ class CameraClient(ZmqClient):
         return intriValueDouble
 
     def getCameraId(self):
-        return self.__getCameraStatus().eyeId
+        return self.getCameraInfo()["eyeId"]
 
-    def getCameraIp(self):
-        return self.__getCameraStatus().ip
+    def getCameraInfo(self):
+        response = self.__sendRequest(Command.GetCameraInfo)
+        info = json.loads(response[SIZE_OF_JSON:-1])
+        return info["camera_info"]
 
     def getCameraVersion(self):
-        return self.__getCameraStatus().version
+        return self.getCameraInfo()["version"]
 
     def getParameter(self,paraName):
-        request = image_pb2.Request()
-        request.command = NetCamCmd.GetCameraParameter
-        request.valueString = paraName
+        request = {}
+        request[Service.cmd] = Command.GetCameraParams
+        request[Service.property_name] = paraName
+        request = json.dumps(request)
         reply = ZmqClient.sendReq(self, request)
-        return float(reply.parameterValue)
+        reply = json.loads(reply[SIZE_OF_JSON:-1])
+        allConfigs =  reply["camera_config"]["configs"][0]
+        if(paraName in allConfigs):
+            return allConfigs[paraName]
+        print("Property" + paraName + "not exist!")
+        return None
 
     def setParameter(self,paraName,value):
-        request = image_pb2.Request()
-        request.command = NetCamCmd.SetCameraParameter
-        request.valueString = paraName
-        request.valueDouble = value
+        request = {}
+        request[Service.cmd] = Command.SetCameraParams
+        request[Service.camera_config] = {}
+        request[Service.camera_config][paraName] = value
+        request[Service.persistent] = "false"
+        request = json.dumps(request)
         reply = ZmqClient.sendReq(self, request)
-        return reply.error
+        reply = json.loads(reply[SIZE_OF_JSON:-1])
+        if ("err_msg" in reply):
+            return reply["err_msg"]
 
-    def __sendRequest(self, commandx, value):
-        request = image_pb2.Request()
-        request.command = commandx
-        request.valueDouble = value
+    def __sendRequest(self, commandx, property_name = "", value = 0, image_type = 0):
+        request = {}
+        request[Service.cmd] = commandx
+        request[Service.property_name] = property_name
+        request[Service.property_value] = value
+        request[Service.image_type] = image_type
+        request = json.dumps(request)
         reply = ZmqClient.sendReq(self, request)
         return reply
 
-    def __getCameraStatus(self):
-        reply = self.__sendRequest(NetCamCmd.GetCameraStatus, 0)
-        StatusUnicode = reply.cameraStatus
-        StatusBytes = StatusUnicode.encode("utf-8")
-        cameraStatus = cameraStatus_pb2.CameraStatus()
-        cameraStatus.ParseFromString(StatusBytes)
-        return cameraStatus
-
     def captureCloud(self):
-        reply = self.__sendRequest(NetCamCmd.CaptureGratingImage,4)
-        depthC3 = read32FC3Mat(reply.imageGrating)
+        response = self.__sendRequest(Command.CaptureGratingImage,image_type=4)
+        jsonSize = readInt(response, 0)
+        scale = readDouble(response, jsonSize + SIZE_OF_JSON)
+        imageSize = readInt(response, SIZE_OF_JSON + jsonSize + SIZE_OF_SCALE)
+        imageBegin = SIZE_OF_JSON + jsonSize + SIZE_OF_SCALE + SIZE_OF_INT
+        imageDepth = response[imageBegin: imageBegin + imageSize]
+        depthC3 = read32FC3Mat(imageDepth,scale)
         color = self.captureColorImg()
         return self.getRGBCloud(color, depthC3)
     
