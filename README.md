@@ -1,5 +1,5 @@
 # Mech-Eye_python_interface
-This is official Python interfaces for Mech-Eye cameras. If the version of MechEye camera is older than 1.0.0, please switch to older versions of sdk, see tags.
+This is official Python interfaces for Mech-Eye cameras. If the version of MechEye camera is older than 1.2.0, please switch to older versions of sdk, see tags.
 
 ## Introduction
 

@@ -17,6 +17,7 @@ SIZE_OF_SCALE = 8
 class ImageType():
     DEPTH = 1
     COLOR = 2
+    MatXYZ = 16
     COLOR_DEPTH = COLOR | DEPTH
 
 
@@ -37,7 +38,6 @@ class Command:
     GetServerInfo = "GetServerInfo"
     SetCameraParams = "SetCameraConfig"
     GetCameraParams = "GetCameraConfig"
-    CaptureGratingImage = "CaptureGratingImage"
 
 
 class CameraIntri:
@@ -219,7 +219,7 @@ class CameraClient(ZmqClient):
         return reply
 
     def captureCloud(self):
-        response = self.__sendRequest(Command.CaptureGratingImage,image_type=4)
+        response = self.__sendRequest(Command.CaptureImage,image_type=ImageType.MatXYZ)
         jsonSize = readInt(response, 0)
         scale = readDouble(response, jsonSize + SIZE_OF_JSON)
         imageSize = readInt(response, SIZE_OF_JSON + jsonSize + SIZE_OF_SCALE)
