@@ -13,6 +13,7 @@ SIZE_OF_DOUBLE = ctypes.sizeof(ctypes.c_double)
 SIZE_OF_INT = ctypes.sizeof(ctypes.c_int32)
 SIZE_OF_JSON = 4
 SIZE_OF_SCALE = 8
+VISIBLE_DEPTH_THRESHOLD = 1e-3
 
 class ImageType():
     DEPTH = 1
@@ -229,6 +230,10 @@ class CameraClient(ZmqClient):
         color = self.captureColorImg()
         return self.getRGBCloud(color, depthC3)
     
+    def removeZero(self, depth, color):
+        nonZeroIndices = depth[:,2] > VISIBLE_DEPTH_THRESHOLD
+        return depth[nonZeroIndices], color[nonZeroIndices]
+
     def getRGBCloud(self,color,depth):
         test_pcd = open3d.geometry.PointCloud()  # 定义点云
         color.flatten()
@@ -237,6 +242,7 @@ class CameraClient(ZmqClient):
         depth.flatten()
         depth = depth * 0.001
         depth.resize(int(np.size(depth)/3),3)
+        depth, color = self.removeZero(depth, color)
         test_pcd.points = open3d.utility.Vector3dVector(depth)  # 定义点云坐标位置
         test_pcd.colors = open3d.utility.Vector3dVector(color)  # 定义点云的颜色
         return test_pcd
