@@ -1,9 +1,9 @@
 # Mech-Eye_python_interface
-This is official Python interfaces for Mech-Eye cameras. 
+This is official Python interfaces for Mech-Eye cameras. If the version of MechEye camera is older than 1.0.0, please switch to older versions of sdk, see tags.
 
 ## Introduction
 
-This project is developped by python. We use ZeroMQ library to connect camera devices in the LANs. And Google protobuf is used to pack and unpack data from network. Supported on both Windows and Ubuntu OS.
+This project is developped by python. We use ZeroMQ library to connect camera devices in the LANs. And json is used to pack and unpack data from network. Supported on both Windows and Ubuntu OS.
 
 ## Features
 
@@ -115,11 +115,11 @@ print ("Version: %s" % (camera.getCameraVersion()))
 
 We can set and get the value of a specific parameter, in this case, we choose exposure time for color image:
 
-```c++
-camera.setParameter("camera2DExpTime",15)
-print(camera.getParameter("camera2DExpTime"))
-camera.setParameter("camera2DExpTime",20)
-print(camera.getParameter("camera2DExpTime"))
+```python
+camera.setParameter("scan2dExposureMode", 0) # set exposure mode to Timed
+print(camera.getParameter("scan2dExposureMode"))
+camera.setParameter("scan2dExposureTime",20) # set exposure time to 20ms
+print(camera.getParameter("scan2dExposureTime"))
 ```
 
 We can capture color images and depth images by camera as arrays and also save them:
