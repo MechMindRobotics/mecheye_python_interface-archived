@@ -77,6 +77,10 @@ There are two main classes: CameraClient and ZmqClient. CameraClient is subclass
 
   * **getCameraVersion()**: get camera's version number.
 
+  * **getColorImgSize()** : get the height and width of the color image to be captured.
+
+  * **getDepthImgSize()** : get the height and width of the depth image to be captured.
+
   * **getParameter()** : get the value of a specific parameter in camera.
 
   * **setParameter()** : set the value of a specific parameter in camera.
@@ -111,6 +115,8 @@ intri = camera.getCameraIntri()
 print ("Camera Info: %s" % (camera.getCameraInfo())) 
 print ("Camera ID: %s" % (camera.getCameraId()))
 print ("Version: %s" % (camera.getCameraVersion()))
+print ("Color Image Size: %s %s" % (camera.getColorImgSize()))
+print ("Depth Image Size: %s %s" % (camera.getDepthImgSize()))
 ```
 
 We can set and get the value of a specific parameter, in this case, we choose exposure time for color image:

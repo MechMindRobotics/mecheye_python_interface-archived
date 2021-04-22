@@ -29,6 +29,9 @@ class Service():
     image_type = "image_type"
     persistent = "persistent"
     camera_config = "camera_config"
+    image_format = "image_format"
+    size2d = "imageSize2D"
+    size3d = "imageSize3D"
 
 class Command:
     CaptureImage = "CaptureImage"
@@ -39,6 +42,7 @@ class Command:
     GetServerInfo = "GetServerInfo"
     SetCameraParams = "SetCameraConfig"
     GetCameraParams = "GetCameraConfig"
+    GetImageFormat = "GetImageFormat"
 
 
 class CameraIntri:
@@ -246,3 +250,16 @@ class CameraClient(ZmqClient):
         test_pcd.points = open3d.utility.Vector3dVector(depth)  # 定义点云坐标位置
         test_pcd.colors = open3d.utility.Vector3dVector(color)  # 定义点云的颜色
         return test_pcd
+
+    def getImgSize(self):
+        response = self.__sendRequest(Command.GetImageFormat)
+        info = json.loads(response[SIZE_OF_JSON:-1])
+        return info[Service.image_format]
+
+    def getColorImgSize(self):
+        size2d = self.getImgSize()[Service.size2d]
+        return int(size2d[0]), int(size2d[1])
+
+    def getDepthImgSize(self):
+        size3d = self.getImgSize()[Service.size3d]
+        return int(size3d[0]), int(size3d[1])

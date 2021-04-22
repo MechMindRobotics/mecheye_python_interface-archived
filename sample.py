@@ -17,11 +17,13 @@ if __name__ == '__main__':
     # always set ip before do anything else
     if not camera.connect(camera_ip):
         exit(-1)
-    # get some camera info like intrincis, ip, id and Version
+    # get some camera info like intrincis, ip, id, version and image size
     intri = camera.getCameraIntri()
     print ("Camera Info: %s" % (camera.getCameraInfo()))
     print ("Camera ID: %s" % (camera.getCameraId()))
     print ("Version: %s" % (camera.getCameraVersion()))
+    print ("Color Image Size: %s %s" % (camera.getColorImgSize()))
+    print ("Depth Image Size: %s %s" % (camera.getDepthImgSize()))
 
     # capture depth image and color image and save them
     depth = camera.captureDepthImg()
