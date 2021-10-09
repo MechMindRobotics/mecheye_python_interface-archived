@@ -23,8 +23,7 @@ class ZmqClient:
         self.__socket.setsockopt(zmq.LINGER, 0)
         self.__addr = createAddr(ip, port)
         print("connect to %s" % (self.__addr))
-        self.__socket.connect(self.__addr)
-        return True
+        return ~bool(self.__socket.connect(self.__addr))
 
     def disconnect(self):
         self.__socket.disconnect(self.__addr)
@@ -43,7 +42,7 @@ class ZmqClient:
                 return {}
             return reply
         except Exception as e:
-            print("Network Error! Please check your ip address and connection!")
+            print("Network Error! Please check your IP address and connection!")
             sys.exit(0)
 
     def __sendMsg(self):
@@ -52,5 +51,5 @@ class ZmqClient:
             self.__socket.send_string(message)
             return self.__socket.recv()
         except Exception as e:
-            print("Network Error! Please check your ip address and connection!")
+            print("Network Error! Please check your IP address and connection!")
             sys.exit(0)

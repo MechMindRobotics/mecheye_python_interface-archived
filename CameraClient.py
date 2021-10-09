@@ -129,7 +129,7 @@ class CameraClient(ZmqClient):
         ZmqClient.__init__(self)
 
     def connect(self, ip):
-        return ZmqClient.setAddr(self, ip, self.__kImagePort, 60000)
+        return ZmqClient.setAddr(self, ip, self.__kImagePort, 10000)
 
     def captureDepthImg(self):
         response = self.__sendRequest(Command.CaptureImage, image_type = ImageType.DEPTH)
@@ -151,7 +151,7 @@ class CameraClient(ZmqClient):
         imageBegin = SIZE_OF_JSON + jsonSize + SIZE_OF_SCALE + SIZE_OF_INT
         imageRGB = response[imageBegin : imageBegin + imageSize]
         if len(imageRGB) == 0:
-            print("Client depth image is empty!")
+            print("Client color image is empty!")
             return {}
         print("Color image captured!")
         return cv2.imdecode(asMat(imageRGB), cv2.IMREAD_COLOR)
