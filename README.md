@@ -1,6 +1,7 @@
 # Mech-Eye_python_interface
-This is official Python interfaces for Mech-Eye cameras. If the version of MechEye camera is older than 1.2.0, please switch to older versions of sdk, see tags.
+This is official Python interfaces for Mech-Eye cameras. 
 
+Please select the proper branch corresponding to the camera firmware version.
 ## Introduction
 
 This project is developped by python. We use ZeroMQ library to connect camera devices in the LANs. And json is used to pack and unpack data from network. Supported on both Windows and Ubuntu OS.
