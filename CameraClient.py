@@ -206,7 +206,7 @@ class CameraClient(ZmqClient):
         request[Service.cmd] = Command.SetCameraParams
         request[Service.camera_config] = {}
         request[Service.camera_config][paraName] = value
-        request[Service.persistent] = "false"
+        request[Service.persistent] = True
         request = json.dumps(request)
         reply = ZmqClient.sendReq(self, request)
         reply = json.loads(reply[SIZE_OF_JSON:-1])
