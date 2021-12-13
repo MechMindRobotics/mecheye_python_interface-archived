@@ -209,11 +209,14 @@ class CameraClient(ZmqClient):
         request = json.dumps(request)
         reply = ZmqClient.sendReq(self, request)
         reply = json.loads(reply[SIZE_OF_JSON:-1])
-        allConfigs =  reply["camera_config"]["configs"][0]
+        if (not self.__isResponseValid(reply)):
+            return {}
+        configId = reply["camera_config"]["current_idx"]
+        allConfigs = reply["camera_config"]["configs"][configId]
         if(paraName in allConfigs):
             return allConfigs[paraName]
-        print("Property" + paraName + "not exist!")
-        return None
+        print("Property" + paraName + "does not exist!")
+        return {}
 
     def setParameter(self,paraName,value):
         request = {}
