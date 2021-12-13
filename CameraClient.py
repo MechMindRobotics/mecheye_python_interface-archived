@@ -128,6 +128,13 @@ class CameraClient(ZmqClient):
     def __init__(self):
         ZmqClient.__init__(self)
 
+    def __isResponseValid(self, info):
+        if ("err_msg" in info and "Unsupported command" in info["err_msg"]):
+            print("Unsupported command! Please check the command!")
+            return False
+        else:
+            return True
+
     def connect(self, ip):
         return ZmqClient.setAddr(self, ip, self.__kImagePort, 10000)
 
@@ -160,8 +167,9 @@ class CameraClient(ZmqClient):
         response = self.__sendRequest(Command.GetCameraIntri, 0)
         print("Camera intrinsics: ")
         intriJson = json.loads(response[SIZE_OF_JSON:-1])
+        if (not self.__isResponseValid(intriJson)):
+            return {}
         intriValue = intriJson["camera_intri"]['intrinsic']
-
         intri = CameraIntri()
         intri.setValue(
             float(
@@ -178,15 +186,21 @@ class CameraClient(ZmqClient):
         return intriValueDouble
 
     def getCameraId(self):
-        return self.getCameraInfo()["eyeId"]
+        if(self.getCameraInfo()):
+            return self.getCameraInfo()["eyeId"]
+        return ""
 
     def getCameraInfo(self):
         response = self.__sendRequest(Command.GetCameraInfo)
         info = json.loads(response[SIZE_OF_JSON:-1])
+        if (not self.__isResponseValid(info)):
+            return ""
         return info["camera_info"]
 
     def getCameraVersion(self):
-        return self.getCameraInfo()["version"]
+        if (self.getCameraInfo()):
+            return self.getCameraInfo()["version"]
+        return ""
 
     def getParameter(self,paraName):
         request = {}
@@ -210,8 +224,8 @@ class CameraClient(ZmqClient):
         request = json.dumps(request)
         reply = ZmqClient.sendReq(self, request)
         reply = json.loads(reply[SIZE_OF_JSON:-1])
-        if ("err_msg" in reply):
-            return reply["err_msg"]
+        if (self.__isResponseValid(reply)):
+            return "Set parameter " + paraName + " successfully!"
 
     def __sendRequest(self, commandx, property_name = "", value = 0, image_type = 0):
         request = {}
@@ -254,12 +268,18 @@ class CameraClient(ZmqClient):
     def getImgSize(self):
         response = self.__sendRequest(Command.GetImageFormat)
         info = json.loads(response[SIZE_OF_JSON:-1])
+        if (not self.__isResponseValid(info)):
+            return {}
         return info[Service.image_format]
 
     def getColorImgSize(self):
-        size2d = self.getImgSize()[Service.size2d]
-        return int(size2d[0]), int(size2d[1])
+        if(self.getImgSize()):
+            size2d = self.getImgSize()[Service.size2d]
+            return int(size2d[0]), int(size2d[1])
+        return 0,0
 
     def getDepthImgSize(self):
-        size3d = self.getImgSize()[Service.size3d]
-        return int(size3d[0]), int(size3d[1])
+        if (self.getImgSize()):
+            size3d = self.getImgSize()[Service.size3d]
+            return int(size3d[0]), int(size3d[1])
+        return 0,0
