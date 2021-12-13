@@ -36,7 +36,6 @@ class Service():
 class Command:
     CaptureImage = "CaptureImage"
     GetCameraIntri = "GetCameraIntri"
-    GetCameraId = "GetCameraId"
     GetCameraInfo = "GetCameraInfo"
     GetCamera2dInfo = "GetCamera2dInfo"
     GetServerInfo = "GetServerInfo"
