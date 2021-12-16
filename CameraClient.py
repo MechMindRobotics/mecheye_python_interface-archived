@@ -81,7 +81,7 @@ def readInt(data,pos):
 def asMat(data, offset=0):
     mat = []
     for i in range(offset, len(data)):
-        mat.append(data[i]) # in Python 2.x you may need to unpack data: unpack(">B",data[i])
+        mat.append(data[i]) # In Python 2.x you may need to unpack data: unpack(">B",data[i])
     mat = np.asarray(mat, dtype="uint8")
     return mat
 
@@ -255,7 +255,7 @@ class CameraClient(ZmqClient):
         return depth[nonZeroIndices], color[nonZeroIndices]
 
     def getRGBCloud(self,color,depth):
-        test_pcd = open3d.geometry.PointCloud()  # 定义点云
+        pointCloud = open3d.geometry.PointCloud()  # Define point cloud.
         color.flatten()
         color = color / 256
         color.resize(int(np.size(color)/3),3)
@@ -263,9 +263,9 @@ class CameraClient(ZmqClient):
         depth = depth * 0.001
         depth.resize(int(np.size(depth)/3),3)
         depth, color = self.removeZero(depth, color)
-        test_pcd.points = open3d.utility.Vector3dVector(depth)  # 定义点云坐标位置
-        test_pcd.colors = open3d.utility.Vector3dVector(color)  # 定义点云的颜色
-        return test_pcd
+        pointCloud.points = open3d.utility.Vector3dVector(depth)  # Define the coordinate position of the point cloud.
+        pointCloud.colors = open3d.utility.Vector3dVector(color)  # Define the color of the point cloud.
+        return pointCloud
 
     def getImgSize(self):
         response = self.__sendRequest(Command.GetImageFormat)

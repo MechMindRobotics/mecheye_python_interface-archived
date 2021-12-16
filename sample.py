@@ -12,12 +12,12 @@ if __name__ == '__main__':
 
     camera = CameraClient()
     save_file = True
-    # camera ip should be modified to actual ip address
+    # The camera IP should be modified to the actual IP address.
     camera_ip = "192.168.3.226"
-    # always set ip before do anything else
+    # Always set IP before doing anything else.
     if not camera.connect(camera_ip):
         exit(-1)
-    # get some camera info like intrincis, ip, id, version and image size
+    # Get some camera information like intrincis, IP, ID, version and image size.
     intri = camera.getCameraIntri()
     print ("Camera Info: %s" % (camera.getCameraInfo()))
     print ("Camera ID: %s" % (camera.getCameraId()))
@@ -25,7 +25,7 @@ if __name__ == '__main__':
     print ("Color Image Size: %s %s" % (camera.getColorImgSize()))
     print ("Depth Image Size: %s %s" % (camera.getDepthImgSize()))
 
-    # capture depth image and color image and save them
+    # Capture depth image and color image and save them.
     depth = camera.captureDepthImg()
     color = camera.captureColorImg()
 
@@ -37,12 +37,11 @@ if __name__ == '__main__':
             os.makedirs(SAVE_PATH)
         cv2.imwrite(SAVE_PATH + "/mechmind_depth.tif", depth)
         cv2.imwrite(SAVE_PATH + "/mechmind_color.jpg", color)
-    # set some parameters of camera, you can refer to parameters' names in Mech_eye
 
-    # get rgb point cloud. Using open3d to store and visualize the cloud.
+    # Get rgb point cloud and use open3d to store and visualize the cloud.
     pcd = camera.captureCloud()
     open3d.visualization.draw_geometries([pcd])
-    # set some parameters of camera, you can refer to parameters' names in Mech_eye
+    # Set some parameters of camera which can refer to parameters' names in Mech_Eye.
     print(camera.setParameter("scan2dExposureMode",0)) # set exposure mode to Timed
     print(camera.getParameter("scan2dExposureMode"))
     print(camera.setParameter("scan2dExposureTime",20)) # set exposure time to 20ms
