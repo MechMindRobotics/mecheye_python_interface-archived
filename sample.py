@@ -36,7 +36,6 @@ if __name__ == '__main__':
         if not os.path.exists(SAVE_PATH):
             os.makedirs(SAVE_PATH)
         cv2.imwrite(SAVE_PATH + "/mechmind_depth.tif", depth)
-        cv2.imwrite(SAVE_PATH + "/mechmind_depth.png", depth)
         cv2.imwrite(SAVE_PATH + "/mechmind_color.jpg", color)
     # set some parameters of camera, you can refer to parameters' names in Mech_eye
 
