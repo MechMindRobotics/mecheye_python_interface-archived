@@ -46,4 +46,9 @@ if __name__ == '__main__':
     print(camera.getParameter("scan2dExposureMode"))
     print(camera.setParameter("scan2dExposureTime",20)) # set exposure time to 20ms
     print(camera.getParameter("scan2dExposureTime"))
+
+    # roi = [500, 500, 100, 100] # roi: Height, Width, X, Y
+    # print(camera.setParameter("roi", roi))
+    # print(camera.getParameter("roi"))
+
     exit(0)
