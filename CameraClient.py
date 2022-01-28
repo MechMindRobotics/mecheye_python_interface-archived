@@ -221,7 +221,15 @@ class CameraClient(ZmqClient):
         request = {}
         request[Service.cmd] = Command.SetCameraParams
         request[Service.camera_config] = {}
-        request[Service.camera_config][paraName] = value
+        if ('roi' == paraName):
+            roi = {}
+            roi["Height"] = value[0]
+            roi["Width"] = value[1]
+            roi["X"] = value[2]
+            roi["Y"] = value[3]
+            request[Service.camera_config][paraName] = roi
+        else:
+            request[Service.camera_config][paraName] = value
         request[Service.persistent] = True
         request = json.dumps(request)
         reply = ZmqClient.sendReq(self, request)
