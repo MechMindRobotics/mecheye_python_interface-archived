@@ -1,19 +1,11 @@
-# Mech-Eye_python_interface
-This is official Python interfaces for Mech-Eye cameras. 
+# This repository is archived.
+
+## It's highly recommended to use the latest version of [Mech-Eye python API](https://github.com/MechMindRobotics/mecheye_python_samples).
 
 Please select the proper branch corresponding to the camera firmware version.
-## Introduction
 
-This project is developped by python. We use ZeroMQ library to connect camera devices in the LANs. And json is used to pack and unpack data from network. Supported on both Windows and Ubuntu OS.
+If the camera firmware version is greater than or equal to 1.5.0, please use the latest version of [Mech-Eye python API](https://github.com/MechMindRobotics/mecheye_python_samples).
 
-## Features
-
-By using these interfaces, you can easily control your mech_eye cameras in python programs. The features are as follows:
-
-* Connect to your camera in your LANS.
-* Set and get camera parameters like exposure time, period and so on.
-* Get color images and depth images as numpy arrays.
-* Get point cloud data as the format defined in open3d, a python lib which can deal with point clouds.
 
 ## Installation
 
